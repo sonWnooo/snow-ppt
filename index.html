@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>∞/1s · snow 大模型游戏提报</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --ink:#111111;
+  --acc:#EB7081;
+  --font:"DengXian","等线","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font)}
+
+/* ---- 16:9 fixed stage, scaled to fit window ---- */
+#stage{
+  position:absolute;left:50%;top:50%;
+  width:1280px;height:720px;
+  transform:translate(-50%,-50%) scale(1);
+  background:#fff;
+  box-shadow:0 6px 44px rgba(17,17,17,.10);
+}
+/* ---- slides: stacked, crossfade ---- */
+.slide{
+  position:absolute;inset:0;overflow:hidden;
+  opacity:0;visibility:hidden;
+  transition:opacity .45s ease,visibility .45s ease;
+}
+.slide.active{opacity:1;visibility:visible;z-index:2}
+/* ---- entrance animation (fade-up, like .anim) ---- */
+.imgwrap{
+  position:absolute;inset:0;
+  opacity:0;transform:translateY(18px);
+  transition:opacity .6s ease,transform .6s ease;
+}
+.slide.active .imgwrap{opacity:1;transform:none}
+.slideimg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
+/* ---- videos: exact pptx position, autoplay + loop (gif effect) ---- */
+.vid{position:absolute;display:block;object-fit:fill}
+/* ---- progress bar ---- */
+#progress{position:fixed;left:0;bottom:0;width:100%;height:2px;background:rgba(17,17,17,.08);z-index:50}
+#progress i{display:block;height:100%;width:0;background:var(--acc);transition:width .35s ease}
+/* ---- edge click zones ---- */
+.navzone{
+  position:fixed;top:0;bottom:0;width:52px;z-index:40;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(17,17,17,.35);font-size:30px;user-select:none;
+  opacity:0;transition:opacity .25s ease;
+}
+.navzone:hover{opacity:1;background:rgba(17,17,17,.03)}
+#navprev{left:0}#navnext{right:0}
+/* ---- page counter & hint ---- */
+#pagenum{position:fixed;right:18px;bottom:14px;font-size:13px;color:rgba(17,17,17,.45);z-index:45;letter-spacing:.05em}
+#hint{
+  position:fixed;left:18px;bottom:12px;font-size:12px;color:rgba(17,17,17,.38);
+  z-index:45;transition:opacity .8s ease;letter-spacing:.03em;
+}
+#hint.gone{opacity:0}
+/* ---- overview (key O) ---- */
+#overview{
+  position:fixed;inset:0;z-index:80;display:none;
+  background:rgba(255,255,255,.97);overflow:auto;padding:44px 48px;
+}
+#overview.open{display:block}
+#ovtitle{max-width:1200px;margin:0 auto 20px;font-size:15px;color:rgba(17,17,17,.55);letter-spacing:.06em}
+#ovtitle b{color:var(--ink);font-weight:600}
+#ovgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1200px;margin:0 auto}
+.ov-card{position:relative;cursor:pointer;box-shadow:0 2px 12px rgba(17,17,17,.14);transition:transform .2s ease}
+.ov-card:hover{transform:translateY(-3px)}
+.ov-card.cur{outline:3px solid var(--acc)}
+.ov-card img{width:100%;display:block}
+.ov-num{
+  position:absolute;left:8px;top:8px;background:rgba(17,17,17,.55);color:#fff;
+  font-size:12px;padding:1px 9px;border-radius:10px;letter-spacing:.05em;
+}
+@media (max-width:900px){#ovgrid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide01.png" alt="slide 1">
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide02.png" alt="slide 2">
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media1.mp4" style="left:0%;top:14.1852%;width:100%;height:85.8148%"></video>
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide03.png" alt="slide 3">
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide04.png" alt="slide 4">
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide05.png" alt="slide 5">
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide06.png" alt="slide 6">
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media2.mp4" style="left:1.5833%;top:34.0648%;width:19.6562%;height:43.8519%"></video>
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media3.mp4" style="left:22.0417%;top:34.0648%;width:20%;height:43.963%"></video>
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media4.mp4" style="left:42.8438%;top:34.0741%;width:18.5885%;height:43.9537%"></video>
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media5.mp4" style="left:83.0365%;top:29%;width:15.25%;height:28.963%"></video>
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media6.mp4" style="left:62.2344%;top:34.287%;width:18.8854%;height:43.7407%"></video>
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media7.mp4" style="left:83.0365%;top:61.7407%;width:15.1354%;height:29.25%"></video>
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide07.png" alt="slide 7">
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide08.png" alt="slide 8">
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide09.png" alt="slide 9">
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media8.mp4" style="left:0%;top:21.7222%;width:47.6042%;height:58.7685%"></video>
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media9.mp4" style="left:47.6042%;top:24.0741%;width:50.2292%;height:54.0648%"></video>
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide10.png" alt="slide 10">
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media10.mp4" style="left:46.3438%;top:25.6389%;width:52.5833%;height:50.9352%"></video>
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media11.mp4" style="left:3.6302%;top:25.6389%;width:41.2656%;height:53.213%"></video>
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide11.png" alt="slide 11">
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media12.mp4" style="left:60%;top:38.3889%;width:36.9531%;height:32.8148%"></video>
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide12.png" alt="slide 12">
+      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media13.mp4" style="left:38.7292%;top:12.8426%;width:61.2708%;height:74.3056%"></video>
+    </div>
+  </section>
+  <section class="slide">
+    <div class="imgwrap">
+      <img class="slideimg" src="slides/slide13.png" alt="slide 13">
+    </div>
+  </section>
+
+</div>
+
+<div class="navzone" id="navprev" title="上一页">&#8249;</div>
+<div class="navzone" id="navnext" title="下一页">&#8250;</div>
+
+<div id="progress"><i id="pbar"></i></div>
+<div id="pagenum">1 / 13</div>
+<div id="hint">&#8592; &#8594; 翻页 &nbsp;&middot;&nbsp; 滚轮翻页 &nbsp;&middot;&nbsp; O 总览 &nbsp;&middot;&nbsp; F 全屏</div>
+
+<div id="overview">
+  <div id="ovtitle"><b>&#8734;/1s &middot; snow 大模型游戏提报</b> &nbsp;共 13 页 &nbsp;&mdash;&nbsp; 点击任意页跳转，Esc/O 关闭</div>
+  <div id="ovgrid"></div>
+</div>
+
+<script>
+(function(){
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var N = slides.length;
+  var pbar = document.getElementById('pbar');
+  var pagenum = document.getElementById('pagenum');
+  var overview = document.getElementById('overview');
+  var ovgrid = document.getElementById('ovgrid');
+  var hint = document.getElementById('hint');
+  var cur = -1;
+
+  // build overview thumbnails
+  slides.forEach(function(s, i){
+    var card = document.createElement('div');
+    card.className = 'ov-card';
+    var img = document.createElement('img');
+    img.src = 'slides/slide' + ('0' + (i+1)).slice(-2) + '.png';
+    img.loading = 'lazy';
+    var num = document.createElement('span');
+    num.className = 'ov-num';
+    num.textContent = (i+1);
+    card.appendChild(img); card.appendChild(num);
+    card.addEventListener('click', function(){ overview.classList.remove('open'); goTo(i); });
+    ovgrid.appendChild(card);
+  });
+  var cards = Array.prototype.slice.call(ovgrid.children);
+
+  function fit(){
+    var sc = Math.min(window.innerWidth/1280, window.innerHeight/720);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + sc + ')';
+  }
+  window.addEventListener('resize', fit);
+  fit();
+
+  function resetVideos(slide){
+    var vs = slide.querySelectorAll('video');
+    Array.prototype.forEach.call(vs, function(v){
+      v.pause();
+      try{ v.currentTime = 0; }catch(e){}
+    });
+  }
+  function startVideos(slide){
+    var vs = slide.querySelectorAll('video');
+    Array.prototype.forEach.call(vs, function(v){
+      if(!v.src && v.dataset.src){ v.src = v.dataset.src; }
+      try{ v.currentTime = 0; }catch(e){}
+      var p = v.play();
+      if(p && p.catch){ p.catch(function(){}); }
+    });
+  }
+
+  function activate(i){
+    if(i === cur){ return; }
+    if(cur >= 0){
+      slides[cur].classList.remove('active');
+      resetVideos(slides[cur]);
+    }
+    cur = i;
+    var s = slides[cur];
+    s.classList.add('active');
+    startVideos(s);
+    // replay entrance animation
+    var w = s.querySelector('.imgwrap');
+    if(w){
+      w.style.transition = 'none';
+      w.style.opacity = '0';
+      w.style.transform = 'translateY(18px)';
+      void w.offsetWidth;
+      w.style.transition = '';
+      w.style.opacity = '';
+      w.style.transform = '';
+    }
+    pbar.style.width = ((cur+1)/N*100) + '%';
+    pagenum.textContent = (cur+1) + ' / ' + N;
+    try{ history.replaceState(null, '', '#' + (cur+1)); }catch(e){}
+    cards.forEach(function(c, ci){ c.classList.toggle('cur', ci === cur); });
+  }
+  function goTo(i){ activate(Math.max(0, Math.min(N-1, i))); }
+  function next(){ goTo(cur+1); }
+  function prev(){ goTo(cur-1); }
+
+  // init from hash (#1 ~ #N)
+  var h = parseInt((location.hash || '').replace('#',''), 10);
+  activate(isNaN(h) ? 0 : Math.max(0, Math.min(N-1, h-1)));
+
+  window.addEventListener('hashchange', function(){
+    var hh = parseInt(location.hash.replace('#',''), 10);
+    if(!isNaN(hh) && (hh-1) !== cur){ goTo(hh-1); }
+  });
+
+  // keyboard (same keys as the reference deck)
+  window.addEventListener('keydown', function(e){
+    if(e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' '){
+      e.preventDefault(); next();
+    } else if(e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp'){
+      e.preventDefault(); prev();
+    } else if(e.key === 'Home'){ goTo(0); }
+    else if(e.key === 'End'){ goTo(N-1); }
+    else if(e.key === 'o' || e.key === 'O'){ overview.classList.toggle('open'); }
+    else if(e.key === 'f' || e.key === 'F'){
+      if(document.fullscreenElement){ document.exitFullscreen(); }
+      else if(document.documentElement.requestFullscreen){
+        document.documentElement.requestFullscreen().catch(function(){});
+      }
+    }
+    else if(e.key === 'Escape'){ overview.classList.remove('open'); }
+  });
+
+  // mouse wheel = scroll through the deck (throttled)
+  var wheelLock = false;
+  window.addEventListener('wheel', function(e){
+    if(overview.classList.contains('open')){ return; }
+    if(Math.abs(e.deltaY) < 20){ return; }
+    if(wheelLock){ return; }
+    wheelLock = true;
+    setTimeout(function(){ wheelLock = false; }, 550);
+    if(e.deltaY > 0){ next(); } else { prev(); }
+  }, { passive: true });
+
+  // touch swipe
+  var tx = 0, ty = 0;
+  window.addEventListener('touchstart', function(e){
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  window.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - tx;
+    var dy = e.changedTouches[0].clientY - ty;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)){
+      if(dx < 0){ next(); } else { prev(); }
+    }
+  }, { passive: true });
+
+  // edge zones
+  document.getElementById('navprev').addEventListener('click', prev);
+  document.getElementById('navnext').addEventListener('click', next);
+
+  // fade the hint after a while
+  setTimeout(function(){ hint.classList.add('gone'); }, 5000);
+})();
+</script>
+</body>
+</html>
