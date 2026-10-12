@@ -2,317 +2,412 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>∞/1s · snow 大模型游戏提报</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>《∞/1 秒》大模型游戏提报 · 网页版</title>
 <style>
-:root{
-  --bg:#ffffff;
-  --ink:#111111;
-  --acc:#EB7081;
-  --font:"DengXian","等线","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font)}
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --ink: #111111;
+    --muted: #767676;
+    --faint: #a6a6a6;
+    --line: #e4e4e4;
+    --acc: #EB7081;
+    --sans: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Segoe UI", "Helvetica Neue", sans-serif;
+    --light: "DengXian Light", "等线 Light", "DengXian", "等线", "Microsoft YaHei", sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--sans); }
 
-/* ---- 16:9 fixed stage, scaled to fit window ---- */
-#stage{
-  position:absolute;left:50%;top:50%;
-  width:1280px;height:720px;
-  transform:translate(-50%,-50%) scale(1);
-  background:#fff;
-  box-shadow:0 6px 44px rgba(17,17,17,.10);
-}
-/* ---- slides: stacked, crossfade ---- */
-.slide{
-  position:absolute;inset:0;overflow:hidden;
-  opacity:0;visibility:hidden;
-  transition:opacity .45s ease,visibility .45s ease;
-}
-.slide.active{opacity:1;visibility:visible;z-index:2}
-/* ---- entrance animation (fade-up, like .anim) ---- */
-.imgwrap{
-  position:absolute;inset:0;
-  opacity:0;transform:translateY(18px);
-  transition:opacity .6s ease,transform .6s ease;
-}
-.slide.active .imgwrap{opacity:1;transform:none}
-.slideimg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block}
-/* ---- videos: exact pptx position, autoplay + loop (gif effect) ---- */
-.vid{position:absolute;display:block;object-fit:fill}
-/* ---- progress bar ---- */
-#progress{position:fixed;left:0;bottom:0;width:100%;height:2px;background:rgba(17,17,17,.08);z-index:50}
-#progress i{display:block;height:100%;width:0;background:var(--acc);transition:width .35s ease}
-/* ---- edge click zones ---- */
-.navzone{
-  position:fixed;top:0;bottom:0;width:52px;z-index:40;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  color:rgba(17,17,17,.35);font-size:30px;user-select:none;
-  opacity:0;transition:opacity .25s ease;
-}
-.navzone:hover{opacity:1;background:rgba(17,17,17,.03)}
-#navprev{left:0}#navnext{right:0}
-/* ---- page counter & hint ---- */
-#pagenum{position:fixed;right:18px;bottom:14px;font-size:13px;color:rgba(17,17,17,.45);z-index:45;letter-spacing:.05em}
-#hint{
-  position:fixed;left:18px;bottom:12px;font-size:12px;color:rgba(17,17,17,.38);
-  z-index:45;transition:opacity .8s ease;letter-spacing:.03em;
-}
-#hint.gone{opacity:0}
-/* ---- overview (key O) ---- */
-#overview{
-  position:fixed;inset:0;z-index:80;display:none;
-  background:rgba(255,255,255,.97);overflow:auto;padding:44px 48px;
-}
-#overview.open{display:block}
-#ovtitle{max-width:1200px;margin:0 auto 20px;font-size:15px;color:rgba(17,17,17,.55);letter-spacing:.06em}
-#ovtitle b{color:var(--ink);font-weight:600}
-#ovgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:1200px;margin:0 auto}
-.ov-card{position:relative;cursor:pointer;box-shadow:0 2px 12px rgba(17,17,17,.14);transition:transform .2s ease}
-.ov-card:hover{transform:translateY(-3px)}
-.ov-card.cur{outline:3px solid var(--acc)}
-.ov-card img{width:100%;display:block}
-.ov-num{
-  position:absolute;left:8px;top:8px;background:rgba(17,17,17,.55);color:#fff;
-  font-size:12px;padding:1px 9px;border-radius:10px;letter-spacing:.05em;
-}
-@media (max-width:900px){#ovgrid{grid-template-columns:repeat(2,1fr)}}
+  /* ---------- 舞台：16:9，等比缩放（PPT 13.33in × 7.5in → 1280×720，1in = 96px） ---------- */
+  #stage {
+    position: absolute; left: 50%; top: 50%;
+    width: 1280px; height: 720px;
+    transform: translate(-50%, -50%) scale(1);
+    transform-origin: center center;
+  }
+
+  .slide { position: absolute; inset: 0; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity .45s ease; }
+  .slide.light { background: var(--bg); color: var(--ink); }
+  .slide.dark  { background: #000000; color: #fff; }
+  .slide.active { opacity: 1; visibility: visible; z-index: 2; }
+
+  /* 入场动画（不改变排版，仅轻微上浮淡入） */
+  .slide .content { position: absolute; inset: 0; opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; }
+  .slide.active .content { opacity: 1; transform: none; }
+
+  /* ---------- 绝对定位元素（还原 PPT 坐标） ---------- */
+  .abs { position: absolute; }
+  .abs.center-v { display: flex; align-items: center; }
+  .txt { white-space: pre-wrap; word-break: break-word; }
+  .txt.nowrap { white-space: pre; }
+
+  .kicker { font-size: 13.3px; font-weight: 700; color: #1F41AA; letter-spacing: .02em; }
+  .h-title { font-size: 36px; font-weight: 700; line-height: 1.15; }
+  .body-txt { font-size: 24px; line-height: 1.32; }
+  .body-txt p { margin: 0; }
+
+  video.med {
+    position: absolute; display: block; width: 100%; height: 100%;
+    object-fit: fill; background: #000;
+  }
+  img.pic { position: absolute; display: block; }
+
+  /* ---------- 页面 chrome（老师版 UI） ---------- */
+  #progress { position: fixed; z-index: 50; left: 0; bottom: 0; height: 2px; width: 100%; background: #efefef; cursor: pointer; }
+  #progress i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .4s ease; }
+
+  .navzone { position: fixed; z-index: 45; top: 0; bottom: 0; width: 52px; cursor: pointer; display: grid; place-items: center; color: transparent; font-size: 26px; transition: color .2s; user-select: none; }
+  .navzone:hover { color: #c9c9c9; }
+  #navprev { left: 0; } #navnext { right: 0; }
+
+  #hint { position: fixed; z-index: 55; right: 18px; bottom: 14px; font-size: 11.5px; color: var(--faint); letter-spacing: .08em; user-select: none; }
+
+  /* 总览（按 O 或双击空白处） */
+  #overview { position: fixed; inset: 0; z-index: 80; display: none; background: rgba(255,255,255,.97); padding: 56px 64px; overflow: auto; }
+  #overview.open { display: block; }
+  #overview h3 { font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); margin-bottom: 26px; }
+  #ovgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .ov-card { cursor: pointer; border: 1px solid var(--line); border-radius: 2px; padding: 16px 18px; background: #fff; transition: .15s; min-height: 86px; }
+  .ov-card:hover { border-color: var(--ink); }
+  .ov-card.cur { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .ov-card .n { font-size: 11px; color: var(--faint); letter-spacing: .12em; }
+  .ov-card .t { margin-top: 8px; font-size: 15px; font-weight: 700; line-height: 1.5; color: var(--ink); }
 </style>
 </head>
 <body>
 
 <div id="stage">
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide01.png" alt="slide 1">
+
+  <!-- ============ 1 封面 ============ -->
+  <section class="slide light" data-title="封面">
+    <div class="content">
+      <img class="pic" src="assets/img/image1.png" style="left:256px; top:181px; width:719px; height:360px;" alt="《∞/1 秒》封面">
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide02.png" alt="slide 2">
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media1.mp4" style="left:0%;top:14.1852%;width:100%;height:85.8148%"></video>
+
+  <!-- ============ 2 世界观介绍（深色） ============ -->
+  <section class="slide dark" data-title="《∞/1 秒》世界观介绍">
+    <div class="content">
+      <div class="abs center-v txt nowrap" style="left:62px; top:34px; width:384px; height:27px; padding:2px;">
+        <span class="kicker">05  /  ONE SECOND</span>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:89px; width:357px; height:47px; padding:2px; color:#fff;">《∞/1 秒》世界观介绍</div>
+      <div class="abs txt body-txt" style="left:654px; top:145px; width:595px; height:504px; padding:5px 10px; color:#fff;"><p>《∞/1 秒》是一款以时间感知、陪伴与分离为主题的互动叙事游戏，侧重故事性。</p><p></p><p>       故事发生在一个介于现实与梦境之间的空间。玩家从一间熟悉而温暖的房间开始探索，以日记本为连接现实与记忆的媒介，通过多维视角的切换、时间轨迹的变化以及环境物品的交互，收集线索、做出选择，逐步拼凑出完整的故事。</p><p></p><p>       游戏探讨陪伴、情感的变化与生命的有限性。它并非试图让玩家改变过去，而是引导玩家在时间与关系的轨迹逐渐显现时，重新理解并正视分离。</p><p></p><p>       玩家也需要在最后回答一个贯穿游戏始终的问题：</p><p>                           </p><p>       永恒到底有多少秒:_______________</p></div>
+      <div class="abs" style="left:260px; top:434px; width:331px; height:240px;">
+        <video class="med" src="assets/media/media1.mp4" poster="assets/img/image2.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:76px; top:221px; width:371px; height:182px;">
+        <video class="med" src="assets/media/media2.mp4" poster="assets/img/image3.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <img class="pic" src="assets/img/image4.png" style="left:76px; top:448px; width:141px; height:191px;" alt="">
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide03.png" alt="slide 3">
+
+  <!-- ============ 3 故事线 ============ -->
+  <section class="slide light" data-title="《∞/1 秒》故事线">
+    <div class="content">
+      <div class="abs center-v txt nowrap" style="left:62px; top:34px; width:384px; height:27px; padding:2px;">
+        <span class="kicker">05  /  ONE SECOND</span>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:89px; width:285px; height:47px; padding:2px; color:#000;">《∞/1 秒》故事线</div>
+      <div class="abs txt body-txt" style="left:750px; top:284px; width:469px; height:242px; padding:5px 10px; color:#000;"><p></p><p>       总体采用线性玩法叠加多路径。玩家进入游戏之后会逐次体验三个故事，通过二维三维和四维之间的切换去搜集碎片化的信息，游玩过程伴随着选择，导向每个故事的不同结局。</p><p></p><p></p></div>
+      <img class="pic" src="assets/img/image5.png" style="left:35px; top:232px; width:660px; height:389px;" alt="故事线图">
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide04.png" alt="slide 4">
+
+  <!-- ============ 4 叙事载体 ============ -->
+  <section class="slide light" data-title="《∞/1 秒》叙事载体">
+    <div class="content">
+      <div class="abs center-v txt nowrap" style="left:62px; top:34px; width:384px; height:27px; padding:2px;">
+        <span class="kicker">05  /  ONE SECOND</span>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:89px; width:322px; height:47px; padding:2px; color:#000;">《∞/1 秒》叙事载体</div>
+      <div class="abs txt body-txt" style="left:602px; top:269px; width:646px; height:388px; padding:5px 10px; color:#000;"><p></p><p>在这个世界里，玩家拥有不同的观测维度：</p><p><b>二维是记录</b></p><p><b>三维是亲身经历</b></p><p><b>四维则能够让人同时观察一段经历在时间中的变化与轨迹。</b></p><p>玩家可以重新看见过去被忽略的细节，理解一段关系如何开始、变化，又走向不同的结局。但看见时间的全貌，并不意味着能够全部改变它。</p><p></p><p></p></div>
+      <img class="pic" src="assets/img/image6.png" style="left:139px; top:184px; width:322px; height:155px;" alt="二维">
+      <img class="pic" src="assets/img/image7.png" style="left:139px; top:346px; width:322px; height:155px;" alt="三维">
+      <img class="pic" src="assets/img/image8.png" style="left:139px; top:508px; width:322px; height:135px;" alt="四维">
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide05.png" alt="slide 5">
+
+  <!-- ============ 5 封面视频（深色） ============ -->
+  <section class="slide dark" data-title="《∞/1 秒》封面">
+    <div class="content">
+      <div class="abs" style="left:112px; top:125px; width:1056px; height:510px;">
+        <video class="med" src="assets/media/media3.mp4" poster="assets/img/image9.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:23px; top:32px; width:250px; height:47px; padding:2px; color:#fff;">《∞/1 秒》封面</div>
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide06.png" alt="slide 6">
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media2.mp4" style="left:1.5833%;top:34.0648%;width:19.6562%;height:43.8519%"></video>
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media3.mp4" style="left:22.0417%;top:34.0648%;width:20%;height:43.963%"></video>
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media4.mp4" style="left:42.8438%;top:34.0741%;width:18.5885%;height:43.9537%"></video>
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media5.mp4" style="left:83.0365%;top:29%;width:15.25%;height:28.963%"></video>
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media6.mp4" style="left:62.2344%;top:34.287%;width:18.8854%;height:43.7407%"></video>
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media7.mp4" style="left:83.0365%;top:61.7407%;width:15.1354%;height:29.25%"></video>
+
+  <!-- ============ 6 角色设定 ============ -->
+  <section class="slide light" data-title="角色设定">
+    <div class="content">
+      <div class="abs center-v txt nowrap" style="left:62px; top:34px; width:384px; height:27px; padding:2px;">
+        <span class="kicker">05  /  ONE SECOND</span>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:61px; width:384px; height:56px; padding:2px; color:#26272B;">角色设定</div>
+      <img class="pic" src="assets/img/image10.png" style="left:539px; top:227px; width:179px; height:179px;" alt="">
+      <img class="pic" src="assets/img/image11.png" style="left:730px; top:419px; width:358px; height:180px;" alt="">
+      <img class="pic" src="assets/img/image12.png" style="left:730px; top:227px; width:357px; height:179px;" alt="">
+      <img class="pic" src="assets/img/image13.png" style="left:539px; top:419px; width:180px; height:180px;" alt="">
+      <img class="pic" src="assets/img/image14.png" style="left:730px; top:420px; width:357px; height:179px;" alt="">
+      <img class="pic" src="assets/img/image15.jpeg" style="left:77px; top:116px; width:401px; height:585px;" alt="角色三视图">
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide07.png" alt="slide 7">
+
+  <!-- ============ 7 角色设定二 ============ -->
+  <section class="slide light" data-title="角色设定 · 二">
+    <div class="content">
+      <img class="pic" src="assets/img/image16.png" style="left:430px; top:153px; width:464px; height:464px;" alt="">
+      <div class="abs center-v txt nowrap" style="left:62px; top:34px; width:384px; height:27px; padding:2px;">
+        <span class="kicker">05  /  ONE SECOND</span>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:61px; width:384px; height:56px; padding:2px; color:#26272B;">角色设定</div>
+      <img class="pic" src="assets/img/image17.jpeg" style="left:46px; top:162px; width:484px; height:484px;" alt="角色立绘">
+      <img class="pic" src="assets/img/image18.png" style="left:5px; top:138px; width:207px; height:312px;" alt="">
+      <img class="pic" src="assets/img/image19.png" style="left:824px; top:153px; width:234px; height:444px;" alt="">
+      <img class="pic" src="assets/img/image20.png" style="left:1073px; top:373px; width:127px; height:223px;" alt="">
+      <img class="pic" src="assets/img/image21.png" style="left:1073px; top:153px; width:127px; height:211px;" alt="">
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide08.png" alt="slide 8">
+
+  <!-- ============ 8 角色动作设定（6 视频） ============ -->
+  <section class="slide light" data-title="角色动作设定">
+    <div class="content">
+      <div class="abs center-v txt nowrap" style="left:62px; top:34px; width:384px; height:27px; padding:2px;">
+        <span class="kicker">05  /  ONE SECOND</span>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:64px; width:220px; height:47px; padding:2px; color:#26272B;">角色动作设定</div>
+      <div class="abs" style="left:20px; top:245px; width:252px; height:316px;">
+        <video class="med" src="assets/media/media4.mp4" poster="assets/img/image22.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:282px; top:245px; width:256px; height:317px;">
+        <video class="med" src="assets/media/media5.mp4" poster="assets/img/image23.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:548px; top:246px; width:238px; height:317px;">
+        <video class="med" src="assets/media/media6.mp4" poster="assets/img/image24.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:1063px; top:208px; width:195px; height:208px;">
+        <video class="med" src="assets/media/media7.mp4" poster="assets/img/image25.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:797px; top:247px; width:242px; height:315px;">
+        <video class="med" src="assets/media/media8.mp4" poster="assets/img/image26.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:1063px; top:444px; width:194px; height:210px;">
+        <video class="med" src="assets/media/media9.mp4" poster="assets/img/image27.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide09.png" alt="slide 9">
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media8.mp4" style="left:0%;top:21.7222%;width:47.6042%;height:58.7685%"></video>
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media9.mp4" style="left:47.6042%;top:24.0741%;width:50.2292%;height:54.0648%"></video>
+
+  <!-- ============ 9 场景设定（深色） ============ -->
+  <section class="slide dark" data-title="场景设定">
+    <div class="content">
+      <img class="pic" src="assets/img/image28.png" style="left:91px; top:22px; width:1189px; height:698px;" alt="场景设定">
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:64px; width:148px; height:47px; padding:2px; color:#fff;">场景设定</div>
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide10.png" alt="slide 10">
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media10.mp4" style="left:46.3438%;top:25.6389%;width:52.5833%;height:50.9352%"></video>
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media11.mp4" style="left:3.6302%;top:25.6389%;width:41.2656%;height:53.213%"></video>
+
+  <!-- ============ 10 场景灰模 ============ -->
+  <section class="slide light" data-title="场景灰模">
+    <div class="content">
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:64px; width:148px; height:47px; padding:2px; color:#26272B;">场景灰模</div>
+      <img class="pic" src="assets/img/image29.png" style="left:23px; top:207px; width:560px; height:388px;" alt="灰模">
+      <img class="pic" src="assets/img/image30.png" style="left:598px; top:101px; width:651px; height:330px;" alt="灰模">
+      <img class="pic" src="assets/img/image31.png" style="left:809px; top:468px; width:220px; height:128px;" alt="灰模">
+      <img class="pic" src="assets/img/image32.png" style="left:600px; top:468px; width:220px; height:128px;" alt="灰模">
+      <img class="pic" src="assets/img/image33.png" style="left:1029px; top:468px; width:220px; height:128px;" alt="灰模">
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide11.png" alt="slide 11">
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media12.mp4" style="left:60%;top:38.3889%;width:36.9531%;height:32.8148%"></video>
+
+  <!-- ============ 11 三维场景渲染 · 昼（深色） ============ -->
+  <section class="slide dark" data-title="三维场景渲染 · 昼">
+    <div class="content">
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:64px; width:267px; height:47px; padding:2px; color:#fff;">三维场景渲染 昼</div>
+      <div class="abs" style="left:0px; top:157px; width:610px; height:423px;">
+        <video class="med" src="assets/media/media10.mp4" poster="assets/img/image34.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:610px; top:174px; width:643px; height:389px;">
+        <video class="med" src="assets/media/media11.mp4" poster="assets/img/image35.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide12.png" alt="slide 12">
-      <video class="vid" muted loop playsinline preload="metadata" data-src="videos/media13.mp4" style="left:38.7292%;top:12.8426%;width:61.2708%;height:74.3056%"></video>
+
+  <!-- ============ 12 三维场景渲染 · 夜（深色） ============ -->
+  <section class="slide dark" data-title="三维场景渲染 · 夜">
+    <div class="content">
+      <div class="abs" style="left:593px; top:184px; width:673px; height:367px;">
+        <video class="med" src="assets/media/media12.mp4" poster="assets/img/image36.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs" style="left:46px; top:184px; width:528px; height:383px;">
+        <video class="med" src="assets/media/media1.mp4" poster="assets/img/image2.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:64px; width:267px; height:47px; padding:2px; color:#fff;">三维场景渲染 夜</div>
     </div>
   </section>
-  <section class="slide">
-    <div class="imgwrap">
-      <img class="slideimg" src="slides/slide13.png" alt="slide 13">
+
+  <!-- ============ 13 交互设定（深色） ============ -->
+  <section class="slide dark" data-title="交互设定">
+    <div class="content">
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:64px; width:148px; height:47px; padding:2px; color:#fff;">交互设定</div>
+      <div class="abs" style="left:768px; top:277px; width:473px; height:236px;">
+        <video class="med" src="assets/media/media13.mp4" poster="assets/img/image37.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <img class="pic" src="assets/img/image38.png" style="left:13px; top:186px; width:721px; height:406px;" alt="交互图">
+    </div>
+  </section>
+
+  <!-- ============ 14 交互设定 · 蝴蝶（深色） ============ -->
+  <section class="slide dark" data-title="交互设定 · 蝴蝶">
+    <div class="content">
+      <img class="pic" src="assets/img/image39.jpeg" style="left:62px; top:153px; width:738px; height:416px;" alt="场景图">
+      <div class="abs" style="left:495px; top:92px; width:784px; height:535px;">
+        <video class="med" src="assets/media/media14.mp4" poster="assets/img/image40.png" muted autoplay loop playsinline preload="auto"></video>
+      </div>
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:80px; width:148px; height:47px; padding:2px; color:#fff;">交互设定</div>
+    </div>
+  </section>
+
+  <!-- ============ 15 AI 技术支持 ============ -->
+  <section class="slide light" data-title="AI 技术支持">
+    <div class="content">
+      <div class="abs center-v txt nowrap h-title" style="left:62px; top:49px; width:187px; height:47px; padding:2px; color:#26272B;">AI技术支持</div>
+      <div class="abs center-v txt nowrap" style="left:87px; top:168px; width:59px; height:37px; padding:2px; font-size:26.7px; font-weight:700; color:#26272B;">GPT</div>
+      <div class="abs center-v txt nowrap" style="left:332px; top:168px; width:360px; height:37px; padding:2px; font-size:26.7px; color:#26272B;">文本以及image gen 图片生成</div>
+      <div class="abs center-v txt nowrap" style="left:87px; top:251px; width:84px; height:37px; padding:2px; font-size:26.7px; font-weight:700; color:#26272B;">codex</div>
+      <div class="abs center-v txt nowrap" style="left:332px; top:251px; width:614px; height:37px; padding:2px; font-size:26.7px; color:#26272B;">6.1 sol 链接blender mcp 做建模、tresjs 做网页渲染</div>
+      <div class="abs center-v txt nowrap" style="left:87px; top:332px; width:82px; height:37px; padding:2px; font-size:26.7px; font-weight:700; color:#26272B;">zcode</div>
+      <div class="abs center-v txt nowrap" style="left:332px; top:332px; width:217px; height:37px; padding:2px; font-size:26.7px; color:#26272B;">平面化交互、视觉</div>
+      <div class="abs center-v txt nowrap" style="left:87px; top:415px; width:111px; height:37px; padding:2px; font-size:26.7px; font-weight:700; color:#26272B;">tripo 3d</div>
+      <div class="abs center-v txt nowrap" style="left:332px; top:415px; width:190px; height:37px; padding:2px; font-size:26.7px; color:#26272B;">人物建模、绑骨</div>
+      <div class="abs center-v txt nowrap" style="left:87px; top:497px; width:112px; height:37px; padding:2px; font-size:26.7px; font-weight:700; color:#26272B;">mixamo</div>
+      <div class="abs center-v txt nowrap" style="left:332px; top:497px; width:164px; height:37px; padding:2px; font-size:26.7px; color:#26272B;">角色动作绑定</div>
+      <div class="abs center-v txt nowrap" style="left:87px; top:580px; width:151px; height:37px; padding:2px; font-size:26.7px; font-weight:700; color:#26272B;">goenhance</div>
+      <div class="abs center-v txt nowrap" style="left:332px; top:580px; width:137px; height:37px; padding:2px; font-size:26.7px; color:#26272B;">图片转视频</div>
     </div>
   </section>
 
 </div>
 
-<div class="navzone" id="navprev" title="上一页">&#8249;</div>
-<div class="navzone" id="navnext" title="下一页">&#8250;</div>
-
-<div id="progress"><i id="pbar"></i></div>
-<div id="pagenum">1 / 13</div>
-<div id="hint">&#8592; &#8594; 翻页 &nbsp;&middot;&nbsp; 滚轮翻页 &nbsp;&middot;&nbsp; O 总览 &nbsp;&middot;&nbsp; F 全屏</div>
+<!-- 页面 chrome -->
+<div id="progress"><i></i></div>
+<div class="navzone" id="navprev">‹</div>
+<div class="navzone" id="navnext">›</div>
+<div id="hint">← → 翻页 · O 总览 · F 全屏</div>
 
 <div id="overview">
-  <div id="ovtitle"><b>&#8734;/1s &middot; snow 大模型游戏提报</b> &nbsp;共 13 页 &nbsp;&mdash;&nbsp; 点击任意页跳转，Esc/O 关闭</div>
+  <h3>全部页面</h3>
   <div id="ovgrid"></div>
 </div>
 
 <script>
-(function(){
-  var stage = document.getElementById('stage');
-  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
-  var N = slides.length;
-  var pbar = document.getElementById('pbar');
-  var pagenum = document.getElementById('pagenum');
-  var overview = document.getElementById('overview');
-  var ovgrid = document.getElementById('ovgrid');
-  var hint = document.getElementById('hint');
-  var cur = -1;
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  const titles = slides.map(s => s.dataset.title);
+  let cur = -1;
 
-  // build overview thumbnails
-  slides.forEach(function(s, i){
-    var card = document.createElement('div');
-    card.className = 'ov-card';
-    var img = document.createElement('img');
-    img.src = 'slides/slide' + ('0' + (i+1)).slice(-2) + '.png';
-    img.loading = 'lazy';
-    var num = document.createElement('span');
-    num.className = 'ov-num';
-    num.textContent = (i+1);
-    card.appendChild(img); card.appendChild(num);
-    card.addEventListener('click', function(){ overview.classList.remove('open'); goTo(i); });
-    ovgrid.appendChild(card);
+  /* --- 总览 --- */
+  const ov = document.getElementById('overview'), ovgrid = document.getElementById('ovgrid');
+  titles.forEach((t, i) => {
+    const c = document.createElement('div');
+    c.className = 'ov-card';
+    c.innerHTML = '<div class="n">' + String(i + 1).padStart(2, '0') + '</div><div class="t">' + t + '</div>';
+    c.onclick = () => { toggleOverview(false); goTo(i); };
+    ovgrid.appendChild(c);
   });
-  var cards = Array.prototype.slice.call(ovgrid.children);
-
-  function fit(){
-    var sc = Math.min(window.innerWidth/1280, window.innerHeight/720);
-    stage.style.transform = 'translate(-50%,-50%) scale(' + sc + ')';
+  function toggleOverview(force) {
+    const open = force !== undefined ? force : !ov.classList.contains('open');
+    ov.classList.toggle('open', open);
+    Array.from(ovgrid.children).forEach((c, i) => c.classList.toggle('cur', i === cur));
   }
-  window.addEventListener('resize', fit);
-  fit();
 
-  function resetVideos(slide){
-    var vs = slide.querySelectorAll('video');
-    Array.prototype.forEach.call(vs, function(v){
+  /* --- 视频管理：进入页面自动循环播放，离开即暂停复位 --- */
+  function playSlideVideos(slide) {
+    slide.querySelectorAll('video').forEach(v => {
+      v.muted = true;
+      try { v.currentTime = 0; } catch (e) {}
+      const p = v.play();
+      if (p && p.catch) p.catch(() => {});
+    });
+  }
+  function stopSlideVideos(slide) {
+    slide.querySelectorAll('video').forEach(v => {
       v.pause();
-      try{ v.currentTime = 0; }catch(e){}
-    });
-  }
-  function startVideos(slide){
-    var vs = slide.querySelectorAll('video');
-    Array.prototype.forEach.call(vs, function(v){
-      if(!v.src && v.dataset.src){ v.src = v.dataset.src; }
-      try{ v.currentTime = 0; }catch(e){}
-      var p = v.play();
-      if(p && p.catch){ p.catch(function(){}); }
+      try { v.currentTime = 0; } catch (e) {}
     });
   }
 
-  function activate(i){
-    if(i === cur){ return; }
-    if(cur >= 0){
-      slides[cur].classList.remove('active');
-      resetVideos(slides[cur]);
-    }
+  function goTo(i) {
+    i = Math.max(0, Math.min(total - 1, i));
+    if (i === cur) return;
+    if (cur >= 0) { slides[cur].classList.remove('active'); stopSlideVideos(slides[cur]); }
     cur = i;
-    var s = slides[cur];
+    const s = slides[cur];
     s.classList.add('active');
-    startVideos(s);
-    // replay entrance animation
-    var w = s.querySelector('.imgwrap');
-    if(w){
-      w.style.transition = 'none';
-      w.style.opacity = '0';
-      w.style.transform = 'translateY(18px)';
-      void w.offsetWidth;
-      w.style.transition = '';
-      w.style.opacity = '';
-      w.style.transform = '';
-    }
-    pbar.style.width = ((cur+1)/N*100) + '%';
-    pagenum.textContent = (cur+1) + ' / ' + N;
-    try{ history.replaceState(null, '', '#' + (cur+1)); }catch(e){}
-    cards.forEach(function(c, ci){ c.classList.toggle('cur', ci === cur); });
+    playSlideVideos(s);
+    progress.style.width = ((cur + 1) / total * 100) + '%';
+    history.replaceState(null, '', '#' + (cur + 1));
+    Array.from(ovgrid.children).forEach((c, k) => c.classList.toggle('cur', k === cur));
   }
-  function goTo(i){ activate(Math.max(0, Math.min(N-1, i))); }
-  function next(){ goTo(cur+1); }
-  function prev(){ goTo(cur-1); }
 
-  // init from hash (#1 ~ #N)
-  var h = parseInt((location.hash || '').replace('#',''), 10);
-  activate(isNaN(h) ? 0 : Math.max(0, Math.min(N-1, h-1)));
-
-  window.addEventListener('hashchange', function(){
-    var hh = parseInt(location.hash.replace('#',''), 10);
-    if(!isNaN(hh) && (hh-1) !== cur){ goTo(hh-1); }
+  const progress = document.querySelector('#progress i');
+  document.getElementById('navprev').onclick = () => goTo(cur - 1);
+  document.getElementById('navnext').onclick = () => goTo(cur + 1);
+  /* 进度条：点击跳到对应页 */
+  document.getElementById('progress').addEventListener('click', e => {
+    const r = e.currentTarget.getBoundingClientRect();
+    goTo(Math.round((e.clientX - r.left) / r.width * (total - 1)));
+  });
+  /* 双击空白处打开总览 */
+  document.addEventListener('dblclick', e => {
+    const t = e.target instanceof Element ? e.target : null;
+    if (t && !t.closest('a,button,#overview,video')) toggleOverview();
   });
 
-  // keyboard (same keys as the reference deck)
-  window.addEventListener('keydown', function(e){
-    if(e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' '){
-      e.preventDefault(); next();
-    } else if(e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp'){
-      e.preventDefault(); prev();
-    } else if(e.key === 'Home'){ goTo(0); }
-    else if(e.key === 'End'){ goTo(N-1); }
-    else if(e.key === 'o' || e.key === 'O'){ overview.classList.toggle('open'); }
-    else if(e.key === 'f' || e.key === 'F'){
-      if(document.fullscreenElement){ document.exitFullscreen(); }
-      else if(document.documentElement.requestFullscreen){
-        document.documentElement.requestFullscreen().catch(function(){});
-      }
+  document.addEventListener('keydown', e => {
+    if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
+      if (e.key === 'Escape') e.target.blur();
+      return;
     }
-    else if(e.key === 'Escape'){ overview.classList.remove('open'); }
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(cur + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(cur - 1); }
+    else if (e.key === 'Home') goTo(0);
+    else if (e.key === 'End') goTo(total - 1);
+    else if (e.key === 'o' || e.key === 'O') toggleOverview();
+    else if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    }
+    else if (e.key === 'Escape') toggleOverview(false);
   });
 
-  // mouse wheel = scroll through the deck (throttled)
-  var wheelLock = false;
-  window.addEventListener('wheel', function(e){
-    if(overview.classList.contains('open')){ return; }
-    if(Math.abs(e.deltaY) < 20){ return; }
-    if(wheelLock){ return; }
-    wheelLock = true;
-    setTimeout(function(){ wheelLock = false; }, 550);
-    if(e.deltaY > 0){ next(); } else { prev(); }
+  /* 触屏滑动 */
+  let tx = null;
+  document.addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (tx === null) return;
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 60) goTo(cur + (dx < 0 ? 1 : -1));
+    tx = null;
   }, { passive: true });
 
-  // touch swipe
-  var tx = 0, ty = 0;
-  window.addEventListener('touchstart', function(e){
-    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
-  }, { passive: true });
-  window.addEventListener('touchend', function(e){
-    var dx = e.changedTouches[0].clientX - tx;
-    var dy = e.changedTouches[0].clientY - ty;
-    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)){
-      if(dx < 0){ next(); } else { prev(); }
-    }
-  }, { passive: true });
+  /* 舞台缩放 */
+  function fit() {
+    const s = Math.min(innerWidth / 1280, innerHeight / 720);
+    document.getElementById('stage').style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  addEventListener('resize', fit); fit();
 
-  // edge zones
-  document.getElementById('navprev').addEventListener('click', prev);
-  document.getElementById('navnext').addEventListener('click', next);
+  /* hash 变化（浏览器前进/后退）同步翻页 */
+  addEventListener('hashchange', () => {
+    const h = parseInt(location.hash.slice(1), 10);
+    if (!isNaN(h) && h - 1 !== cur) goTo(h - 1);
+  });
 
-  // fade the hint after a while
-  setTimeout(function(){ hint.classList.add('gone'); }, 5000);
+  /* 初始页：支持 #N 直达 */
+  const initial = parseInt(location.hash.slice(1), 10);
+  goTo(!isNaN(initial) && initial >= 1 && initial <= total ? initial - 1 : 0);
 })();
 </script>
 </body>
